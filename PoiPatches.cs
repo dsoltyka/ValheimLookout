@@ -100,7 +100,13 @@ namespace POIRadar
                 }
             }
 
-            // Single-hit resource (tin, guck sacks, barnacles, petrified bone...).
+            // Single-hit resource (tin, guck sacks, barnacles, petrified bone...). Saplings and bushes are
+            // Destructibles too, but the game types them as trees; those drop wood, resin and cones, not resources.
+            if (destructible.m_destructibleType != DestructibleType.Default)
+            {
+                return;
+            }
+
             var dropper = go.GetComponent<DropOnDestroyed>();
             if (dropper != null)
             {
@@ -149,6 +155,7 @@ namespace POIRadar
         private static readonly HashSet<string> BulkMaterials = new HashSet<string>(StringComparer.Ordinal)
         {
             StoneItem, "$item_wood", "$item_finewood", "$item_roundlog", "$item_elderbark", "$item_blackwood",
+            "$item_resin", "$item_pinecone", "$item_firecone", "$item_beechseeds", "$item_birchseeds", "$item_acorn",
         };
 
         // ---- Pickables ----
