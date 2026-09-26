@@ -77,6 +77,7 @@ namespace POIRadar
             Vector3 origin = player.transform.position;
             float maxDistance = S.MaxDistance.Value;
             bool exploredOnly = S.OnlyExploredAreas.Value && IsExplored != null;
+            bool hideBuried = !S.ShowBuried.Value;
             bool labels = S.ShowLabels.Value;
             bool large = S.LargeIcons.Value;
 
@@ -86,7 +87,8 @@ namespace POIRadar
                 bool wanted = IsEnabled(marker.Category)
                               && marker.IsActive
                               && (maxDistance <= 0f || Vector3.Distance(origin, position) <= maxDistance)
-                              && (!exploredOnly || IsExplored(map, position));
+                              && (!exploredOnly || IsExplored(map, position))
+                              && !(hideBuried && marker.Category == PoiCategory.OreDeposit && marker.IsBuried);
 
                 if (!wanted)
                 {

@@ -30,6 +30,38 @@ namespace POIRadar
         public Minimap.PinData Pin;
 
         private Func<bool> _isActive;
+        private float? _topY;
+
+        /// <summary>
+        /// True when no part of the object's colliders reaches above the terrain, i.e. it is fully underground
+        /// (an untouched silver vein). The object's own height is cached; the ground is re-queried because it can be dug.
+        /// </summary>
+        public bool IsBuried
+        {
+            get
+            {
+                var zones = ZoneSystem.instance;
+                if (zones == null)
+                {
+                    return false;
+                }
+
+                if (!_topY.HasValue)
+                {
+                    float top = transform.position.y;
+                    foreach (var collider in GetComponentsInChildren<Collider>())
+                    {
+                        if (collider != null && collider.enabled && !collider.isTrigger)
+                        {
+                            top = Mathf.Max(top, collider.bounds.max.y);
+                        }
+                    }
+                    _topY = top;
+                }
+
+                return zones.GetGroundHeight(transform.position, out float ground) && _topY.Value < ground - 0.25f;
+            }
+        }
 
         /// <summary>False while the object is temporarily uninteresting, e.g. a picked berry bush waiting to respawn.</summary>
         public bool IsActive

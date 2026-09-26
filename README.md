@@ -11,7 +11,7 @@ As you explore, everything the game has loaded around you that is worth a detour
 **On by default**
 
 * **Dungeons**: burial chambers, troll caves, sunken crypts, frost caves, infested mines and any other location with an interior, including modded ones.
-* **Ore deposits**: copper, tin, silver, obsidian, black marble, flametal and anything else you can mine that drops more than plain stone. Each pin uses the ore's own item icon, so you can tell them apart at a glance.
+* **Ore deposits**: copper, tin, silver, obsidian, black marble, flametal and anything else you can mine that drops more than plain stone. Each pin uses the ore's own item icon, so you can tell them apart at a glance. Deposits hidden completely under the ground, like untouched silver, stay hidden unless you opt in with `ShowBuried`.
 
 **Off by default** (turn on in the config)
 
@@ -37,6 +37,7 @@ Requires [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepI
 | Categories | `Pickables` | false | Pin berries, mushrooms, plants |
 | Categories | `OtherLocations` | false | Pin surface locations (ruins, camps, tar pits, altars) |
 | Display | `MaxDistance` | 0 | Only pin within this many meters; 0 = everything loaded |
+| Display | `ShowBuried` | false | Also pin deposits fully below the terrain, such as untouched silver veins. Partially exposed veins always show |
 | Display | `OnlyExploredAreas` | false | Only pin objects on map you have already explored (or had shared with you), so the radar never hints at unexplored terrain |
 | Display | `ShowLabels` | true | Draw the name next to each pin |
 | Display | `LargeIcons` | false | Double-size pins |
