@@ -5,7 +5,7 @@ The project imports shared MSBuild props from the [ValheimModBuild](https://gith
 ```
 <parent>/
   ValheimModBuild/
-  ValheimPOIRadar/
+  ValheimLookout/
 ```
 
 Then:
@@ -36,8 +36,8 @@ Paths to the game and the BepInEx profile are configured once in `ValheimModBuil
 
 ## Releasing
 
-1. Bump `<Version>` in `POIRadar.csproj` and add a `CHANGELOG.md` entry.
-2. Run the pack command above. It regenerates `thunderstore/manifest.json` from the csproj and writes `thunderstore/POIRadar-<version>.zip`.
+1. Bump `<Version>` in `Lookout.csproj` and add a `CHANGELOG.md` entry.
+2. Run the pack command above. It regenerates `thunderstore/manifest.json` from the csproj and writes `thunderstore/Lookout-<version>.zip`.
 3. Commit, tag `v<version>`, push, and upload the zip through the normal Thunderstore upload form under the `dsoltyka` team.
 
 Thunderstore renders `README.md` from inside the zip as the mod page, so keep that file user-facing. Anything between the `github-only` markers is stripped from the packaged copy, and images must use absolute URLs.

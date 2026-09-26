@@ -1,7 +1,7 @@
 {
-  "name": "POIRadar",
+  "name": "Lookout",
   "version_number": "1.0.0",
-  "website_url": "https://github.com/dsoltyka/ValheimPOIRadar",
+  "website_url": "https://github.com/dsoltyka/ValheimLookout",
   "description": "Pins nearby dungeons on the minimap, plus an in-game panel to opt into pins for any item the world can yield: ores, plants, anything. Client-side.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2350",

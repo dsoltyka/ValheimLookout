@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace POIRadar
+namespace Lookout
 {
     [Flags]
     internal enum PoiSource

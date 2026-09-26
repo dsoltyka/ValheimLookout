@@ -3,7 +3,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using ValheimModShared;
 
-namespace POIRadar
+namespace Lookout
 {
     /// <summary>
     /// Entry point. Client-side only: it reads the objects the game has already loaded around the player
@@ -13,7 +13,7 @@ namespace POIRadar
     [BepInDependency(Jotunn.Main.ModGuid)]
     public class Plugin : BaseUnityPlugin
     {
-        public const string PluginGuid = "dsoltyka.POIRadar";
+        public const string PluginGuid = "dsoltyka.Lookout";
 
         internal static ManualLogSource Log { get; private set; }
         internal static Settings Settings { get; private set; }

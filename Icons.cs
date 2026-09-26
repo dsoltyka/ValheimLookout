@@ -4,7 +4,7 @@ using System.Reflection;
 using Jotunn.Utils;
 using UnityEngine;
 
-namespace POIRadar
+namespace Lookout
 {
     /// <summary>Sprites embedded under Assets/, loaded once on first use.</summary>
     internal static class Icons
@@ -40,7 +40,7 @@ namespace POIRadar
                         }
                         texture.filterMode = FilterMode.Bilinear;
                         var sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
-                        sprite.name = "POIRadar." + resourceName;
+                        sprite.name = "Lookout." + resourceName;
                         return sprite;
                     }
                 }

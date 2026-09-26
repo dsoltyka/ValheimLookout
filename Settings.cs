@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using BepInEx.Configuration;
 using UnityEngine;
 
-namespace POIRadar
+namespace Lookout
 {
     /// <summary>User-facing configuration. Everything applies immediately; pins are rebuilt on change.</summary>
     internal sealed class Settings
@@ -68,9 +68,9 @@ namespace POIRadar
                     new AcceptableValueRange<float>(0.1f, 5f)));
 
             ToggleKey = config.Bind(ui, "ToggleKey", new KeyboardShortcut(KeyCode.F7),
-                "Key that opens and closes the POI Radar panel.");
+                "Key that opens and closes the Lookout panel.");
             MapButton = config.Bind(ui, "MapButton", true,
-                "Show a 'POI Radar' button in the corner of the large map that opens the panel.");
+                "Show a 'Lookout' button in the corner of the large map that opens the panel.");
 
             config.SettingChanged += (_, __) => Changed?.Invoke();
         }

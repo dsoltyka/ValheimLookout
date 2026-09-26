@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 
-namespace POIRadar
+namespace Lookout
 {
     /// <summary>
     /// Keeps the minimap in sync with the registered <see cref="PoiMarker"/>s: adds an unsaved pin for every marker

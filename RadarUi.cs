@@ -5,7 +5,7 @@ using Jotunn.Managers;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace POIRadar
+namespace Lookout
 {
     /// <summary>
     /// The in-game panel: category toggles at the top, a filter box, and one row per item the world can yield
@@ -108,7 +108,7 @@ namespace POIRadar
             {
                 if (GUIManager.CustomGUIFront == null || GUIManager.Instance == null)
                 {
-                    Plugin.Log.LogWarning("GUI not ready yet; cannot open the POI Radar panel.");
+                    Plugin.Log.LogWarning("GUI not ready yet; cannot open the Lookout panel.");
                     return;
                 }
                 if (_panel == null)
@@ -119,7 +119,7 @@ namespace POIRadar
                     }
                     catch (Exception e)
                     {
-                        Plugin.Log.LogError($"Failed to build the POI Radar panel: {e}");
+                        Plugin.Log.LogError($"Failed to build the Lookout panel: {e}");
                         return;
                     }
                 }
@@ -136,7 +136,7 @@ namespace POIRadar
             }
         }
 
-        /// <summary>Adds a "POI Radar" button to the large map once per Minimap instance.</summary>
+        /// <summary>Adds a "Lookout" button to the large map once per Minimap instance.</summary>
         public void EnsureMapButton(Minimap map)
         {
             if (!S.MapButton.Value)
@@ -156,9 +156,9 @@ namespace POIRadar
 
             try
             {
-                _mapButton = GUIManager.Instance.CreateButton("POI Radar", map.m_largeRoot.transform,
+                _mapButton = GUIManager.Instance.CreateButton("Lookout", map.m_largeRoot.transform,
                     new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(96f, -28f), 150f, 36f);
-                _mapButton.name = "POIRadar.MapButton";
+                _mapButton.name = "Lookout.MapButton";
                 _mapButton.GetComponent<Button>().onClick.AddListener(Toggle);
             }
             catch (Exception e)
@@ -180,10 +180,10 @@ namespace POIRadar
 
             _panel = gui.CreateWoodpanel(GUIManager.CustomGUIFront.transform,
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, PanelWidth, PanelHeight, draggable: true);
-            _panel.name = "POIRadar.Panel";
+            _panel.name = "Lookout.Panel";
 
             // Title
-            gui.CreateText("POI Radar", _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+            gui.CreateText("Lookout", _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
                 new Vector2(0f, -34f), gui.NorseBold, 26, gui.ValheimOrange, true, Color.black, 300f, 40f, false);
 
             // Close

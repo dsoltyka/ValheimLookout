@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using HarmonyLib;
 using UnityEngine;
 
-namespace POIRadar
+namespace Lookout
 {
     /// <summary>
     /// Tags interesting objects with a <see cref="PoiMarker"/> the moment the game creates them locally.

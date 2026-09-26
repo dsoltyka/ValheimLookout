@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>POIRadar</AssemblyName>
-    <RootNamespace>POIRadar</RootNamespace>
+    <AssemblyName>Lookout</AssemblyName>
+    <RootNamespace>Lookout</RootNamespace>
     <Version>1.0.0</Version>
     <Description>Pins nearby dungeons on the minimap, plus an in-game panel to opt into pins for any item the world can yield: ores, plants, anything. Client-side.</Description>
-    <ThunderstoreWebsite>https://github.com/dsoltyka/ValheimPOIRadar</ThunderstoreWebsite>
+    <ThunderstoreWebsite>https://github.com/dsoltyka/ValheimLookout</ThunderstoreWebsite>
   </PropertyGroup>
 
   <ItemGroup>
