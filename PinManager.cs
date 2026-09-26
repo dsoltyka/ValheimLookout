@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ namespace Lookout
                 AccessTools.Method(typeof(Minimap), "IsExplored", new[] { typeof(Vector3) }));
 
         private readonly HashSet<Minimap.PinData> _livePins = new HashSet<Minimap.PinData>();
+        private readonly HashSet<string> _reported = new HashSet<string>();
         private float _nextRefresh;
         private bool _rebuildRequested;
         private LookoutPanel _ui;
@@ -101,6 +103,11 @@ namespace Lookout
 
             foreach (var marker in PoiMarker.All)
             {
+                if (!marker.IsAttached)
+                {
+                    continue;
+                }
+
                 bool active = marker.IsActive;
                 if (active)
                 {
@@ -142,6 +149,17 @@ namespace Lookout
 
                 string label = marker.HoverName ?? item0?.Name ?? string.Empty;
                 Sprite icon = marker.FixedIcon ?? item0?.Icon ?? Icons.Generic;
+
+                // A pin with the fallback icon or no name means the rules met something unexpected; say what, once per prefab.
+                if (icon == Icons.Generic || string.IsNullOrEmpty(label))
+                {
+                    string prefab = PoiPatches.CleanName(marker.gameObject.name);
+                    if (_reported.Add(prefab))
+                    {
+                        string items = string.Join(", ", marker.Items.Select(i => i.Key + (i.Icon == null ? " (no icon)" : "")));
+                        Plugin.Log.LogInfo($"Fallback pin for '{prefab}' ({marker.Category}): hover='{marker.HoverName}', item='{item0?.Key}', yields=[{items}]");
+                    }
+                }
 
                 var pin = map.AddPin(position, Minimap.PinType.None, labels ? label : string.Empty, save: false, isChecked: false);
                 pin.m_icon = icon;

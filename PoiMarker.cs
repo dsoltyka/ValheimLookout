@@ -35,6 +35,12 @@ namespace Lookout
         /// <summary>The live minimap pin, or null while hidden.</summary>
         public Minimap.PinData Pin;
 
+        /// <summary>
+        /// True once Attach* has filled this marker in. Objects that grow by cloning themselves (ash vines) copy the
+        /// component without its data, so a marker can exist with defaults; such markers are ignored until tagged.
+        /// </summary>
+        public bool IsAttached { get; private set; }
+
         private Func<bool> _isActive;
         private float? _topY;
 
@@ -93,6 +99,7 @@ namespace Lookout
             marker.FixedIcon = icon;
             marker.Items = Array.Empty<CatalogEntry>();
             marker._isActive = null;
+            marker.IsAttached = true;
             return marker;
         }
 
@@ -104,6 +111,7 @@ namespace Lookout
             marker.FixedIcon = null;
             marker.Items = items ?? Array.Empty<CatalogEntry>();
             marker._isActive = isActive;
+            marker.IsAttached = true;
             return marker;
         }
 

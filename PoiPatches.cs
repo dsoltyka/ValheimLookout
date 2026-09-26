@@ -78,7 +78,14 @@ namespace Lookout
 
         private static void TagResource(GameObject go, Func<bool> isActive)
         {
-            if (!HasValidZdo(go) || go.GetComponent<PoiMarker>() != null)
+            if (!HasValidZdo(go))
+            {
+                return;
+            }
+
+            // A cloned object carries a blank copy of the marker; fill it in rather than treating it as done.
+            var existing = go.GetComponent<PoiMarker>();
+            if (existing != null && existing.IsAttached)
             {
                 return;
             }
