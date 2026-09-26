@@ -2,7 +2,7 @@
   "name": "POIRadar",
   "version_number": "1.0.0",
   "website_url": "https://github.com/dsoltyka/ValheimPOIRadar",
-  "description": "Pins nearby dungeons and ore on the minimap, plus an in-game panel to opt into any other item the world can yield. Client-side.",
+  "description": "Pins nearby dungeons on the minimap, plus an in-game panel to opt into pins for any item the world can yield: ores, plants, anything. Client-side.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2350",
     "ValheimModding-Jotunn-2.30.2"

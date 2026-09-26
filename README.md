@@ -1,6 +1,6 @@
 # POI Radar
 
-A client-side Valheim mod that pins nearby points of interest on your minimap, and lets you choose exactly what counts.
+A client-side Valheim mod that pins nearby points of interest on your minimap. You choose exactly what counts.
 
 As you explore, everything the game has loaded around you that you have opted into shows up as a pin on both the minimap and the large map. Walk away and the pins go with the terrain; nothing is written to your map save, so your real pins stay clean.
 
@@ -10,14 +10,11 @@ As you explore, everything the game has loaded around you that you have opted in
 
 ## What it pins
 
-**Out of the box**
-
-* **Dungeon entrances**: burial chambers, troll caves, sunken crypts, frost caves, infested mines and any other location with an interior, including modded ones.
-* **Ore**: copper, tin, silver, iron scrap, obsidian, black marble and flametal. Untouched veins count, not just ones someone has already hit. Each pin uses the ore's own icon.
+**Out of the box** only dungeon entrances are pinned: burial chambers, troll caves, sunken crypts, frost caves, infested mines and any other location with an interior, including modded ones.
 
 **Everything else is opt-in, from the panel**
 
-Press **F7** (configurable), or click the **POI Radar** button in the top-left corner of the large map. The panel lists every item the world can yield from something you can mine, break or pick: ores, but also guck, ancient seeds, feathers, soft tissue, yggdrasil wood, berries, mushrooms, and whatever new biomes or mods add. Tick an item and every deposit, breakable or bush that yields it gets a pin with that item's icon. A filter box narrows the list, and a number on each row shows how many sources are loaded near you right now.
+Press **F7** (configurable), or click the **POI Radar** button in the top-left corner of the large map. The panel lists every item the world can yield from something you can mine, break or pick: copper, tin, silver and the other ores, but also guck, ancient seeds, feathers, soft tissue, yggdrasil wood, berries, mushrooms, and whatever new biomes or mods add. Tick an item and every deposit, breakable or bush that yields it gets a pin with that item's icon. Untouched veins count, not just ones someone has already hit. A filter box narrows the list, and a number on each row shows how many sources are loaded near you right now.
 
 The list is built by scanning the game's own object definitions when you load in, so it is complete for your install rather than a hand-picked set.
 
@@ -44,7 +41,7 @@ Requires [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepI
 | --- | --- | --- | --- |
 | What to pin | `Dungeons` | true | Pin dungeon entrances |
 | What to pin | `OtherLocations` | false | Pin surface locations (ruins, camps, tar pits, altars) |
-| What to pin | `Items` | the ores | Comma-separated item tokens to pin; the panel edits this for you |
+| What to pin | `Items` | empty | Comma-separated item tokens to pin; the panel edits this for you |
 | What to pin | `OnlyDiscoveredItems` | true | Only list and pin items your character has already discovered, so the panel does not spoil what you have not found |
 | Display | `MaxDistance` | 0 | Only pin within this many meters; 0 = everything loaded |
 | Display | `ShowBuried` | false | Also pin deposits fully below the terrain |

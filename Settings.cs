@@ -8,8 +8,8 @@ namespace POIRadar
     /// <summary>User-facing configuration. Everything applies immediately; pins are rebuilt on change.</summary>
     internal sealed class Settings
     {
-        public const string DefaultItems =
-            "$item_copperore,$item_tinore,$item_silverore,$item_ironscrap,$item_obsidian,$item_blackmarble,$item_flametalore,$item_flametalore_old";
+        /// <summary>Nothing is pinned until the player opts in from the panel.</summary>
+        public const string DefaultItems = "";
 
         public ConfigEntry<bool> ShowDungeons { get; }
         public ConfigEntry<bool> ShowOtherLocations { get; }
@@ -43,8 +43,8 @@ namespace POIRadar
             ShowOtherLocations = config.Bind(categories, "OtherLocations", false,
                 "Pin surface locations without an interior: ruins, abandoned camps, tar pits, runestones, altars, villages.");
             EnabledItems = config.Bind(categories, "Items", DefaultItems,
-                "Comma-separated item tokens to pin. Any deposit, breakable or pickable that yields one of these gets a pin with that item's icon. " +
-                "Easiest to edit from the in-game panel (see Interface), which lists every item the world can yield.");
+                "Comma-separated item tokens to pin, e.g. $item_copperore,$item_tinore. Any deposit, breakable or pickable that yields one of these gets a pin with that item's icon. " +
+                "Empty by default: nothing is pinned until you opt in. Easiest to edit from the in-game panel (see Interface), which lists every item the world can yield.");
 
             OnlyDiscoveredItems = config.Bind(categories, "OnlyDiscoveredItems", true,
                 "Only list and pin items your character has already discovered (picked up at least once). " +
