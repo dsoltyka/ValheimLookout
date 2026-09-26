@@ -2,7 +2,7 @@
   "name": "POIRadar",
   "version_number": "1.0.0",
   "website_url": "https://github.com/dsoltyka/ValheimPOIRadar",
-  "description": "Shows nearby points of interest on the minimap: dungeon entrances and ore deposits by default, with optional pickables and surface locations. Client-side.",
+  "description": "Pins nearby dungeons and ore on the minimap, plus an in-game panel to opt into any other item the world can yield. Client-side.",
   "dependencies": [
     "denikson-BepInExPack_Valheim-5.4.2350",
     "ValheimModding-Jotunn-2.30.2"

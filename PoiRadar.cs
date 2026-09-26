@@ -23,6 +23,7 @@ namespace POIRadar
         private readonly HashSet<Minimap.PinData> _livePins = new HashSet<Minimap.PinData>();
         private float _nextRefresh;
         private bool _rebuildRequested;
+        private RadarUi _ui;
 
         private static Settings S => Plugin.Settings;
 
@@ -39,6 +40,16 @@ namespace POIRadar
 
         private void Update()
         {
+            if (_ui == null)
+            {
+                _ui = gameObject.AddComponent<RadarUi>();
+            }
+
+            if (S.ToggleKey.Value.IsDown() && Player.m_localPlayer != null)
+            {
+                _ui.Toggle();
+            }
+
             if (Time.time < _nextRefresh)
             {
                 return;
@@ -61,6 +72,9 @@ namespace POIRadar
                 return;
             }
 
+            Catalog.EnsureScanned();
+            _ui.EnsureMapButton(map);
+
             if (_rebuildRequested)
             {
                 _rebuildRequested = false;
@@ -81,14 +95,37 @@ namespace POIRadar
             bool labels = S.ShowLabels.Value;
             bool large = S.LargeIcons.Value;
 
+            Catalog.ResetNearbyCounts();
+
             foreach (var marker in PoiMarker.All)
             {
+                bool active = marker.IsActive;
+                if (active)
+                {
+                    foreach (var item in marker.Items)
+                    {
+                        item.Nearby++;
+                    }
+                }
+
+                CatalogEntry item0 = null;
+                bool enabled;
+                switch (marker.Category)
+                {
+                    case PoiCategory.Dungeon: enabled = S.ShowDungeons.Value; break;
+                    case PoiCategory.Location: enabled = S.ShowOtherLocations.Value; break;
+                    default:
+                        item0 = marker.FirstEnabledItem(S);
+                        enabled = item0 != null;
+                        break;
+                }
+
                 Vector3 position = marker.transform.position;
-                bool wanted = IsEnabled(marker.Category)
-                              && marker.IsActive
+                bool wanted = enabled
+                              && active
                               && (maxDistance <= 0f || Vector3.Distance(origin, position) <= maxDistance)
                               && (!exploredOnly || IsExplored(map, position))
-                              && !(hideBuried && marker.Category == PoiCategory.OreDeposit && marker.IsBuried);
+                              && !(hideBuried && marker.Category == PoiCategory.Resource && marker.IsBuried);
 
                 if (!wanted)
                 {
@@ -101,22 +138,13 @@ namespace POIRadar
                     continue;
                 }
 
-                var pin = map.AddPin(marker.transform.position, Minimap.PinType.None, labels ? marker.Label : string.Empty, save: false, isChecked: false);
-                pin.m_icon = marker.Icon != null ? marker.Icon : Icons.Generic;
+                string label = marker.HoverName ?? item0?.Name ?? string.Empty;
+                Sprite icon = marker.FixedIcon ?? item0?.Icon ?? Icons.Generic;
+
+                var pin = map.AddPin(position, Minimap.PinType.None, labels ? label : string.Empty, save: false, isChecked: false);
+                pin.m_icon = icon;
                 pin.m_doubleSize = large;
                 marker.Pin = pin;
-            }
-        }
-
-        private static bool IsEnabled(PoiCategory category)
-        {
-            switch (category)
-            {
-                case PoiCategory.Dungeon: return S.ShowDungeons.Value;
-                case PoiCategory.OreDeposit: return S.ShowOreDeposits.Value;
-                case PoiCategory.Pickable: return S.ShowPickables.Value;
-                case PoiCategory.Location: return S.ShowOtherLocations.Value;
-                default: return false;
             }
         }
 

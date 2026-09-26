@@ -10,14 +10,14 @@ namespace POIRadar
     /// <summary>
     /// Tags interesting objects with a <see cref="PoiMarker"/> the moment the game creates them locally.
     /// Every patch is a postfix on the object's own initialisation, so there is no scene scanning at all.
+    /// What a resource object yields is decided by <see cref="ResourceRules"/>, the same rules that build the catalog.
     /// </summary>
     [HarmonyPatch]
     internal static class PoiPatches
     {
-        private const string StoneItem = "$item_stone";
         private const float OverworldMaxY = 3000f; // dungeon interiors are generated 5000 m up
 
-        private static Settings S => Plugin.Settings;
+        private static readonly List<ResourceRules.Yield> s_scratch = new List<ResourceRules.Yield>();
 
         // ---- Locations (dungeon entrances + everything else placed by the world generator) ----
 
@@ -38,181 +38,66 @@ namespace POIRadar
             string prefab = CleanName(location.gameObject.name);
             if (location.m_hasInterior)
             {
-                PoiMarker.Attach(location.gameObject, PoiCategory.Dungeon, LocationNames.Get(prefab), Icons.Dungeon);
+                PoiMarker.AttachFixed(location.gameObject, PoiCategory.Dungeon, LocationNames.Get(prefab), Icons.Dungeon);
             }
             else
             {
-                PoiMarker.Attach(location.gameObject, PoiCategory.Location, LocationNames.Get(prefab), Icons.Location);
+                PoiMarker.AttachFixed(location.gameObject, PoiCategory.Location, LocationNames.Get(prefab), Icons.Location);
             }
         }
 
-        // ---- Ore deposits ----
-        //
-        // An untouched deposit is a Destructible: copper/silver/etc. swap to a fractured MineRock5 on the first hit
-        // (m_spawnWhenDestroyed), and small ones like tin simply drop their ore via DropOnDestroyed. Already-hit
-        // deposits are MineRock / MineRock5 objects. All three shapes are tagged so a deposit shows up before
-        // anyone has touched it and keeps showing until it is mined out.
+        // ---- Resources: deposits (intact or fractured), single-hit destructibles, pickables ----
 
         [HarmonyPatch(typeof(Destructible), "Awake")]
         [HarmonyPostfix]
         private static void Destructible_Awake(Destructible __instance)
         {
-            Guard(() => TagDestructible(__instance));
+            Guard(() => TagResource(__instance.gameObject, null));
         }
 
         [HarmonyPatch(typeof(MineRock), "Start")]
         [HarmonyPostfix]
         private static void MineRock_Start(MineRock __instance)
         {
-            Guard(() => TagDeposit(__instance.gameObject, __instance.m_dropItems, __instance.m_name));
+            Guard(() => TagResource(__instance.gameObject, null));
         }
 
         [HarmonyPatch(typeof(MineRock5), "Awake")]
         [HarmonyPostfix]
         private static void MineRock5_Awake(MineRock5 __instance)
         {
-            Guard(() => TagDeposit(__instance.gameObject, __instance.m_dropItems, __instance.m_name));
+            Guard(() => TagResource(__instance.gameObject, null));
         }
 
-        private static void TagDestructible(Destructible destructible)
+        [HarmonyPatch(typeof(Pickable), "Awake")]
+        [HarmonyPostfix]
+        private static void Pickable_Awake(Pickable __instance)
         {
-            var go = destructible.gameObject;
-            if (!HasValidZdo(go))
-            {
-                return;
-            }
-
-            // Intact vein: look at what it fractures into.
-            var frac = destructible.m_spawnWhenDestroyed;
-            if (frac != null)
-            {
-                var rock5 = frac.GetComponent<MineRock5>();
-                if (rock5 != null)
-                {
-                    TagDeposit(go, rock5.m_dropItems, rock5.m_name);
-                    return;
-                }
-                var rock = frac.GetComponent<MineRock>();
-                if (rock != null)
-                {
-                    TagDeposit(go, rock.m_dropItems, rock.m_name);
-                    return;
-                }
-            }
-
-            // Single-hit resource (tin, guck sacks, barnacles, petrified bone...). Saplings and bushes are
-            // Destructibles too, but the game types them as trees; those drop wood, resin and cones, not resources.
-            if (destructible.m_destructibleType != DestructibleType.Default)
-            {
-                return;
-            }
-
-            var dropper = go.GetComponent<DropOnDestroyed>();
-            if (dropper != null)
-            {
-                TagDeposit(go, dropper.m_dropWhenDestroyed, null);
-            }
+            Guard(() => TagResource(__instance.gameObject, () => !__instance.GetPicked()));
         }
 
-        private static void TagDeposit(GameObject go, DropTable drops, string hoverName)
+        private static void TagResource(GameObject go, Func<bool> isActive)
         {
             if (!HasValidZdo(go) || go.GetComponent<PoiMarker>() != null)
             {
                 return;
             }
 
-            var ore = FindResource(drops);
-            if (ore == null)
+            s_scratch.Clear();
+            string hoverName = ResourceRules.Collect(go, s_scratch);
+            if (s_scratch.Count == 0)
             {
                 return;
             }
 
-            string label = !string.IsNullOrEmpty(hoverName) ? Localize(hoverName) : Localize(ore.m_shared.m_name);
-            PoiMarker.Attach(go, PoiCategory.OreDeposit, label, SafeIcon(ore) ?? Icons.Generic);
-        }
-
-        /// <summary>Plain rocks, stumps and logs only drop stone or wood; anything else in the table makes it a resource.</summary>
-        private static ItemDrop.ItemData FindResource(DropTable drops)
-        {
-            if (drops?.m_drops == null)
+            var items = new CatalogEntry[s_scratch.Count];
+            for (int i = 0; i < s_scratch.Count; i++)
             {
-                return null;
+                items[i] = Catalog.Register(s_scratch[i].Item, s_scratch[i].Source);
             }
 
-            foreach (var drop in drops.m_drops)
-            {
-                var item = drop.m_item != null ? drop.m_item.GetComponent<ItemDrop>() : null;
-                var data = item != null ? item.m_itemData : null;
-                if (data?.m_shared == null || BulkMaterials.Contains(data.m_shared.m_name))
-                {
-                    continue;
-                }
-                return data;
-            }
-            return null;
-        }
-
-        private static readonly HashSet<string> BulkMaterials = new HashSet<string>(StringComparer.Ordinal)
-        {
-            StoneItem, "$item_wood", "$item_finewood", "$item_roundlog", "$item_elderbark", "$item_blackwood",
-            "$item_resin", "$item_pinecone", "$item_firecone", "$item_beechseeds", "$item_birchseeds", "$item_acorn",
-        };
-
-        // ---- Pickables ----
-
-        [HarmonyPatch(typeof(Pickable), "Awake")]
-        [HarmonyPostfix]
-        private static void Pickable_Awake(Pickable __instance)
-        {
-            Guard(() => TagPickable(__instance));
-        }
-
-        private static void TagPickable(Pickable pickable)
-        {
-            var go = pickable.gameObject;
-            if (!HasValidZdo(go))
-            {
-                return;
-            }
-
-            var item = pickable.m_itemPrefab != null ? pickable.m_itemPrefab.GetComponent<ItemDrop>() : null;
-            var data = item != null ? item.m_itemData : null;
-            if (data?.m_shared == null)
-            {
-                return;
-            }
-
-            if (IsExcludedPickable(CleanName(go.name), data.m_shared.m_name))
-            {
-                return;
-            }
-
-            string label = !string.IsNullOrEmpty(pickable.m_overrideName) ? Localize(pickable.m_overrideName) : Localize(data.m_shared.m_name);
-            PoiMarker.Attach(go, PoiCategory.Pickable, label, SafeIcon(data) ?? Icons.Generic, () => !pickable.GetPicked());
-        }
-
-        private static bool IsExcludedPickable(string prefabName, string itemName)
-        {
-            string list = S.PickableExclude.Value;
-            if (string.IsNullOrWhiteSpace(list))
-            {
-                return false;
-            }
-
-            foreach (var raw in list.Split(','))
-            {
-                string word = raw.Trim();
-                if (word.Length == 0)
-                {
-                    continue;
-                }
-                if (prefabName.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    itemName.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    return true;
-                }
-            }
-            return false;
+            string label = !string.IsNullOrEmpty(hoverName) ? Catalog.Localize(hoverName) : null;
+            PoiMarker.AttachResource(go, label, items, isActive);
         }
 
         // ---- helpers ----
@@ -234,29 +119,6 @@ namespace POIRadar
         {
             var view = go.GetComponent<ZNetView>();
             return view != null && view.IsValid();
-        }
-
-        private static Sprite SafeIcon(ItemDrop.ItemData data)
-        {
-            try
-            {
-                return data.GetIcon();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static string Localize(string token)
-        {
-            var localization = Localization.instance;
-            if (localization == null || string.IsNullOrEmpty(token))
-            {
-                return token ?? string.Empty;
-            }
-            string text = localization.Localize(token);
-            return string.IsNullOrEmpty(text) ? token : text;
         }
 
         internal static string CleanName(string name)

@@ -1,0 +1,357 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Jotunn.Managers;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace POIRadar
+{
+    /// <summary>
+    /// The in-game panel: category toggles at the top, a filter box, and one row per item the world can yield
+    /// (icon, name, where it comes from, how many are loaded nearby, and an on/off toggle). Built with Jötunn's
+    /// wood-panel helpers so it matches the game. Opened with the configured key or the button on the large map.
+    /// </summary>
+    internal sealed class RadarUi : MonoBehaviour
+    {
+        private const float PanelWidth = 560f;
+        private const float PanelHeight = 680f;
+        private const float RowHeight = 40f;
+
+        private static Settings S => Plugin.Settings;
+
+        private GameObject _panel;
+        private InputField _filter;
+        private Transform _content;
+        private Text _summary;
+        private Toggle _dungeons, _locations, _buried, _explored;
+        private readonly List<Row> _rows = new List<Row>();
+        private bool _dirty = true;
+        private float _nextCountRefresh;
+        private GameObject _mapButton;
+
+        private sealed class Row
+        {
+            public CatalogEntry Entry;
+            public GameObject Root;
+            public Toggle Toggle;
+            public Text Nearby;
+        }
+
+        public bool IsOpen => _panel != null && _panel.activeSelf;
+
+        private void OnEnable()
+        {
+            Catalog.Changed += MarkDirty;
+            S.Changed += MarkDirty;
+        }
+
+        private void OnDisable()
+        {
+            Catalog.Changed -= MarkDirty;
+            S.Changed -= MarkDirty;
+            if (_panel != null)
+            {
+                Destroy(_panel);
+            }
+            if (_mapButton != null)
+            {
+                Destroy(_mapButton);
+            }
+            GUIManager.BlockInput(false);
+        }
+
+        private void Update()
+        {
+            if (!IsOpen)
+            {
+                return;
+            }
+
+            // Leaving the world, or the game's own menus taking over, closes the panel.
+            if (Player.m_localPlayer == null || (Menu.instance != null && Menu.IsVisible()))
+            {
+                SetOpen(false);
+                return;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                SetOpen(false);
+                return;
+            }
+
+            if (_dirty)
+            {
+                _dirty = false;
+                RebuildRows();
+            }
+
+            if (Time.unscaledTime >= _nextCountRefresh)
+            {
+                _nextCountRefresh = Time.unscaledTime + 0.5f;
+                foreach (var row in _rows)
+                {
+                    row.Nearby.text = row.Entry.Nearby > 0 ? row.Entry.Nearby.ToString() : string.Empty;
+                }
+            }
+        }
+
+        public void Toggle()
+        {
+            SetOpen(!IsOpen);
+        }
+
+        public void SetOpen(bool open)
+        {
+            if (open)
+            {
+                if (GUIManager.CustomGUIFront == null || GUIManager.Instance == null)
+                {
+                    Plugin.Log.LogWarning("GUI not ready yet; cannot open the POI Radar panel.");
+                    return;
+                }
+                if (_panel == null)
+                {
+                    try
+                    {
+                        BuildPanel();
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.Log.LogError($"Failed to build the POI Radar panel: {e}");
+                        return;
+                    }
+                }
+                Catalog.EnsureScanned();
+                _dirty = true;
+                _panel.SetActive(true);
+                SyncCategoryToggles();
+                GUIManager.BlockInput(true);
+            }
+            else if (_panel != null && _panel.activeSelf)
+            {
+                _panel.SetActive(false);
+                GUIManager.BlockInput(false);
+            }
+        }
+
+        /// <summary>Adds a "POI Radar" button to the large map once per Minimap instance.</summary>
+        public void EnsureMapButton(Minimap map)
+        {
+            if (!S.MapButton.Value)
+            {
+                if (_mapButton != null)
+                {
+                    Destroy(_mapButton);
+                    _mapButton = null;
+                }
+                return;
+            }
+
+            if (_mapButton != null || map == null || map.m_largeRoot == null || GUIManager.Instance == null)
+            {
+                return;
+            }
+
+            try
+            {
+                _mapButton = GUIManager.Instance.CreateButton("POI Radar", map.m_largeRoot.transform,
+                    new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(96f, -28f), 150f, 36f);
+                _mapButton.name = "POIRadar.MapButton";
+                _mapButton.GetComponent<Button>().onClick.AddListener(Toggle);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning($"Could not add the map button: {e.Message}");
+            }
+        }
+
+        private void MarkDirty()
+        {
+            _dirty = true;
+        }
+
+        // ---- construction ----
+
+        private void BuildPanel()
+        {
+            var gui = GUIManager.Instance;
+
+            _panel = gui.CreateWoodpanel(GUIManager.CustomGUIFront.transform,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, PanelWidth, PanelHeight, draggable: true);
+            _panel.name = "POIRadar.Panel";
+
+            // Title
+            gui.CreateText("POI Radar", _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(0f, -34f), gui.NorseBold, 26, gui.ValheimOrange, true, Color.black, 300f, 40f, false);
+
+            // Close
+            var close = gui.CreateButton("X", _panel.transform, new Vector2(1f, 1f), new Vector2(1f, 1f),
+                new Vector2(-30f, -30f), 36f, 36f);
+            close.GetComponent<Button>().onClick.AddListener(() => SetOpen(false));
+
+            // Category toggles, two per line
+            float y = -76f;
+            _dungeons = CreateLabeledToggle("Dungeon entrances", 30f, y, v => S.ShowDungeons.Value = v);
+            _locations = CreateLabeledToggle("Other locations", PanelWidth / 2f + 10f, y, v => S.ShowOtherLocations.Value = v);
+            y -= 34f;
+            _buried = CreateLabeledToggle("Buried deposits", 30f, y, v => S.ShowBuried.Value = v);
+            _explored = CreateLabeledToggle("Only explored map", PanelWidth / 2f + 10f, y, v => S.OnlyExploredAreas.Value = v);
+
+            // Filter
+            y -= 44f;
+            var filterGo = gui.CreateInputField(_panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(30f + (PanelWidth - 60f) / 2f, y), InputField.ContentType.Standard, "Filter items...", 16, PanelWidth - 60f, 32f);
+            _filter = filterGo.GetComponent<InputField>();
+            _filter.onValueChanged.AddListener(_ => MarkDirty());
+
+            // Summary line
+            y -= 30f;
+            var summaryGo = gui.CreateText("", _panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(30f, y), gui.AveriaSerif, 14, gui.ValheimBeige, true, Color.black, PanelWidth - 60f, 20f, false);
+            AlignLeft(summaryGo);
+            _summary = summaryGo.GetComponent<Text>();
+
+            // Item list
+            y -= 14f;
+            float listHeight = PanelHeight + y - 30f;
+            var scroll = gui.CreateScrollView(_panel.transform, false, true, 10f, 6f,
+                ColorBlock.defaultColorBlock, new Color(0f, 0f, 0f, 0.35f), PanelWidth - 60f, listHeight);
+            var scrollRect = scroll.GetComponent<RectTransform>();
+            scrollRect.anchorMin = new Vector2(0f, 1f);
+            scrollRect.anchorMax = new Vector2(0f, 1f);
+            scrollRect.pivot = new Vector2(0f, 1f);
+            scrollRect.anchoredPosition = new Vector2(30f, y);
+            _content = scroll.GetComponentInChildren<ScrollRect>().content;
+            var layout = _content.GetComponent<VerticalLayoutGroup>() ?? _content.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.childControlHeight = true;
+            layout.childControlWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.childForceExpandWidth = true;
+            layout.spacing = 2f;
+            layout.padding = new RectOffset(4, 4, 4, 4);
+
+            _panel.SetActive(false);
+        }
+
+        private Toggle CreateLabeledToggle(string label, float x, float y, Action<bool> onChanged)
+        {
+            var gui = GUIManager.Instance;
+            var toggleGo = gui.CreateToggle(_panel.transform, 24f, 24f);
+            var rect = toggleGo.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(x, y);
+            var toggle = toggleGo.GetComponent<Toggle>();
+            toggle.onValueChanged.AddListener(v => onChanged(v));
+
+            var text = gui.CreateText(label, _panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(x + 32f, y - 2f), gui.AveriaSerif, 16, gui.ValheimBeige, true, Color.black, 220f, 24f, false);
+            AlignLeft(text);
+            return toggle;
+        }
+
+        private void SyncCategoryToggles()
+        {
+            _dungeons.SetIsOnWithoutNotify(S.ShowDungeons.Value);
+            _locations.SetIsOnWithoutNotify(S.ShowOtherLocations.Value);
+            _buried.SetIsOnWithoutNotify(S.ShowBuried.Value);
+            _explored.SetIsOnWithoutNotify(S.OnlyExploredAreas.Value);
+        }
+
+        private void RebuildRows()
+        {
+            SyncCategoryToggles();
+
+            foreach (var row in _rows)
+            {
+                Destroy(row.Root);
+            }
+            _rows.Clear();
+
+            string filter = _filter != null ? _filter.text.Trim() : string.Empty;
+            var entries = Catalog.Entries
+                .Where(e => filter.Length == 0 || e.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                .OrderByDescending(e => S.IsItemEnabled(e.Key))
+                .ThenBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+            foreach (var entry in entries)
+            {
+                _rows.Add(CreateRow(entry));
+            }
+
+            int enabled = Catalog.Entries.Count(e => S.IsItemEnabled(e.Key));
+            _summary.text = $"{enabled} of {Catalog.Entries.Count()} items pinned. Number on the right = loaded nearby.";
+        }
+
+        private Row CreateRow(CatalogEntry entry)
+        {
+            var gui = GUIManager.Instance;
+
+            var root = new GameObject("Row", typeof(RectTransform), typeof(LayoutElement));
+            root.transform.SetParent(_content, false);
+            root.GetComponent<LayoutElement>().preferredHeight = RowHeight;
+            root.GetComponent<LayoutElement>().minHeight = RowHeight;
+
+            // Icon
+            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconGo.transform.SetParent(root.transform, false);
+            var iconRect = (RectTransform)iconGo.transform;
+            iconRect.anchorMin = new Vector2(0f, 0.5f);
+            iconRect.anchorMax = new Vector2(0f, 0.5f);
+            iconRect.pivot = new Vector2(0f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(6f, 0f);
+            iconRect.sizeDelta = new Vector2(32f, 32f);
+            var icon = iconGo.GetComponent<Image>();
+            icon.sprite = entry.Icon != null ? entry.Icon : Icons.Generic;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+
+            // Name
+            var nameGo = gui.CreateText(entry.Name, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(46f, 0f), gui.AveriaSerif, 17, Color.white, true, Color.black, 260f, RowHeight, false);
+            AlignLeft(nameGo);
+
+            // Source
+            string source = entry.Sources == (PoiSource.Deposit | PoiSource.Pickable) ? "deposit, pickable"
+                : entry.Sources == PoiSource.Pickable ? "pickable" : "deposit";
+            var sourceGo = gui.CreateText(source, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(310f, 0f), gui.AveriaSerif, 13, new Color(0.75f, 0.7f, 0.6f), false, Color.black, 110f, RowHeight, false);
+            AlignLeft(sourceGo);
+
+            // Nearby count
+            var nearbyGo = gui.CreateText("", root.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-70f, 0f), gui.AveriaSerifBold, 16, gui.ValheimOrange, true, Color.black, 50f, RowHeight, false);
+            var nearby = nearbyGo.GetComponent<Text>();
+            nearby.alignment = TextAnchor.MiddleRight;
+
+            // Toggle
+            var toggleGo = gui.CreateToggle(root.transform, 26f, 26f);
+            var toggleRect = toggleGo.GetComponent<RectTransform>();
+            toggleRect.anchorMin = new Vector2(1f, 0.5f);
+            toggleRect.anchorMax = new Vector2(1f, 0.5f);
+            toggleRect.pivot = new Vector2(1f, 0.5f);
+            toggleRect.anchoredPosition = new Vector2(-10f, 0f);
+            var toggle = toggleGo.GetComponent<Toggle>();
+            toggle.SetIsOnWithoutNotify(S.IsItemEnabled(entry.Key));
+            toggle.onValueChanged.AddListener(v => S.SetItemEnabled(entry.Key, v));
+
+            return new Row { Entry = entry, Root = root, Toggle = toggle, Nearby = nearby };
+        }
+
+        private static void AlignLeft(GameObject textGo)
+        {
+            var text = textGo.GetComponent<Text>();
+            if (text != null)
+            {
+                text.alignment = TextAnchor.MiddleLeft;
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            }
+            var rect = textGo.GetComponent<RectTransform>();
+            rect.pivot = new Vector2(0f, 0.5f);
+        }
+    }
+}
