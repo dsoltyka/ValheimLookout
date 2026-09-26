@@ -23,7 +23,7 @@ Paths to the game and the BepInEx profile are configured once in `ValheimModBuil
 
 * `Pickable`: its item.
 * `MineRock` / `MineRock5`: the drop table. These are deposits that have already been hit.
-* `Destructible` of the Default type: if it fractures into a mine rock (`m_spawnWhenDestroyed`), that prefab's drop table; otherwise its `DropOnDestroyed` table. Tree-type destructibles (saplings, bushes) are ignored, which is what keeps resin and cones off the map.
+* `Destructible` of the Default type: if it fractures into a mine rock (`m_spawnWhenDestroyed`), that prefab's drop table (source: deposit); otherwise its `DropOnDestroyed` table (source: breakable). Tree-type destructibles (saplings, bushes) are ignored, which is what keeps resin and cones off the map.
 * Stone and wood are treated as bulk and never listed.
 
 **Catalog** (`Catalog.EnsureScanned`) runs the rules over every prefab in `ZNetScene.m_prefabs` once per world load (and again if the list grows), producing one `CatalogEntry` per item with its localized name and icon. This is what the panel lists.

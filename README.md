@@ -12,7 +12,7 @@ As you explore, everything the game has loaded around you that you have opted in
 
 **Everything else is opt-in, from the panel**
 
-Press **F7** (configurable), or click the **Lookout** button in the top-left corner of the large map. The panel lists every item the world can yield from something you can mine, break or pick: copper, tin, silver and the other ores, but also guck, ancient seeds, feathers, soft tissue, yggdrasil wood, berries, mushrooms, and whatever new biomes or mods add. Tick an item and every deposit, breakable or bush that yields it gets a pin with that item's icon. Untouched veins count, not just ones someone has already hit. A filter box narrows the list, and a number on each row shows how many sources are loaded near you right now.
+Press **F7** (configurable), or click the **Lookout** button in the top-left corner of the large map. The panel lists every item the world can yield from something you can mine, break or pick: copper, tin, silver and the other ores, but also guck, ancient seeds, feathers, soft tissue, yggdrasil wood, berries, mushrooms, and whatever new biomes or mods add. Tick an item and every deposit, breakable or bush that yields it gets a pin with that item's icon. Untouched veins count, not just ones someone has already hit. A filter box narrows the list, each row says whether the item comes from deposits (ore veins), breakables (bone piles, nests, guck sacks, tin) or pickables (plants), and a number shows how many sources are loaded near you right now.
 
 ![The Lookout panel: category switches, filter, and per-item toggles with nearby counts](https://raw.githubusercontent.com/dsoltyka/ValheimLookout/main/docs/panel.png)
 

@@ -395,8 +395,7 @@ namespace Lookout
             nameSize.minWidth = 60f;
             nameSize.preferredHeight = RowHeight;
 
-            string source = entry.Sources == (PoiSource.Deposit | PoiSource.Pickable) ? "both"
-                : entry.Sources == PoiSource.Pickable ? "pickable" : "deposit";
+            string source = SourceLabel(entry.Sources);
             var sourceGo = gui.CreateText(source, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
                 Vector2.zero, gui.AveriaSerif, 13, new Color(0.75f, 0.7f, 0.6f), false, Color.black, 80f, RowHeight, false);
             AlignLeft(sourceGo, clip: true);
@@ -438,6 +437,18 @@ namespace Lookout
                     events.SetSelectedGameObject(null);
                 }
             });
+        }
+
+        private static string SourceLabel(PoiSource sources)
+        {
+            switch (sources)
+            {
+                case PoiSource.Deposit: return "deposit";
+                case PoiSource.Pickable: return "pickable";
+                case PoiSource.Breakable: return "breakable";
+                case PoiSource.None: return string.Empty;
+                default: return "mixed";
+            }
         }
 
         /// <summary>Gives a row child a fixed size in the row's horizontal layout.</summary>

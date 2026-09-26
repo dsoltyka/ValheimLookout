@@ -8,8 +8,9 @@ namespace Lookout
     internal enum PoiSource
     {
         None = 0,
-        Deposit = 1,
-        Pickable = 2,
+        Deposit = 1,    // mine rocks: ore veins, obsidian, black marble...
+        Pickable = 2,   // berries, mushrooms, plants
+        Breakable = 4,  // single-hit objects with a drop table: tin, guck sacks, bone piles, nests...
     }
 
     /// <summary>One item that some nearby object can yield. Players opt in per item.</summary>
@@ -98,7 +99,7 @@ namespace Lookout
                 var dropper = go.GetComponent<DropOnDestroyed>();
                 if (dropper != null)
                 {
-                    AddDrops(dropper.m_dropWhenDestroyed, PoiSource.Deposit, into);
+                    AddDrops(dropper.m_dropWhenDestroyed, PoiSource.Breakable, into);
                 }
             }
 
