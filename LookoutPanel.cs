@@ -182,9 +182,11 @@ namespace Lookout
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, PanelWidth, PanelHeight, draggable: true);
             _panel.name = "Lookout.Panel";
 
-            // Title
-            gui.CreateText("Lookout", _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                new Vector2(0f, -34f), gui.NorseBold, 26, gui.ValheimOrange, true, Color.black, 300f, 40f, false);
+            // Title, centered on the panel
+            var titleGo = gui.CreateText("Lookout", _panel.transform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(0f, -34f), gui.NorseBold, 26, gui.ValheimOrange, true, Color.black, PanelWidth, 40f, false);
+            titleGo.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+            titleGo.GetComponent<Text>().alignment = TextAnchor.MiddleCenter;
 
             // Close
             var close = gui.CreateButton("X", _panel.transform, new Vector2(1f, 1f), new Vector2(1f, 1f),
