@@ -47,6 +47,18 @@ namespace POIRadar
         }
 
         // ---- Ore deposits ----
+        //
+        // An untouched deposit is a Destructible: copper/silver/etc. swap to a fractured MineRock5 on the first hit
+        // (m_spawnWhenDestroyed), and small ones like tin simply drop their ore via DropOnDestroyed. Already-hit
+        // deposits are MineRock / MineRock5 objects. All three shapes are tagged so a deposit shows up before
+        // anyone has touched it and keeps showing until it is mined out.
+
+        [HarmonyPatch(typeof(Destructible), "Awake")]
+        [HarmonyPostfix]
+        private static void Destructible_Awake(Destructible __instance)
+        {
+            Guard(() => TagDestructible(__instance));
+        }
 
         [HarmonyPatch(typeof(MineRock), "Start")]
         [HarmonyPostfix]
@@ -62,26 +74,48 @@ namespace POIRadar
             Guard(() => TagDeposit(__instance.gameObject, __instance.m_dropItems, __instance.m_name));
         }
 
-        private static void TagDeposit(GameObject go, DropTable drops, string hoverName)
+        private static void TagDestructible(Destructible destructible)
         {
-            if (!HasValidZdo(go) || drops == null || drops.m_drops == null)
+            var go = destructible.gameObject;
+            if (!HasValidZdo(go))
             {
                 return;
             }
 
-            // Plain boulders only drop stone; deposits drop an ore (possibly alongside stone).
-            ItemDrop.ItemData ore = null;
-            foreach (var drop in drops.m_drops)
+            // Intact vein: look at what it fractures into.
+            var frac = destructible.m_spawnWhenDestroyed;
+            if (frac != null)
             {
-                var item = drop.m_item != null ? drop.m_item.GetComponent<ItemDrop>() : null;
-                var data = item != null ? item.m_itemData : null;
-                if (data?.m_shared == null || data.m_shared.m_name == StoneItem)
+                var rock5 = frac.GetComponent<MineRock5>();
+                if (rock5 != null)
                 {
-                    continue;
+                    TagDeposit(go, rock5.m_dropItems, rock5.m_name);
+                    return;
                 }
-                ore = data;
-                break;
+                var rock = frac.GetComponent<MineRock>();
+                if (rock != null)
+                {
+                    TagDeposit(go, rock.m_dropItems, rock.m_name);
+                    return;
+                }
             }
+
+            // Single-hit resource (tin, guck sacks, barnacles, petrified bone...).
+            var dropper = go.GetComponent<DropOnDestroyed>();
+            if (dropper != null)
+            {
+                TagDeposit(go, dropper.m_dropWhenDestroyed, null);
+            }
+        }
+
+        private static void TagDeposit(GameObject go, DropTable drops, string hoverName)
+        {
+            if (!HasValidZdo(go) || go.GetComponent<PoiMarker>() != null)
+            {
+                return;
+            }
+
+            var ore = FindResource(drops);
             if (ore == null)
             {
                 return;
@@ -90,6 +124,32 @@ namespace POIRadar
             string label = !string.IsNullOrEmpty(hoverName) ? Localize(hoverName) : Localize(ore.m_shared.m_name);
             PoiMarker.Attach(go, PoiCategory.OreDeposit, label, SafeIcon(ore) ?? Icons.Generic);
         }
+
+        /// <summary>Plain rocks, stumps and logs only drop stone or wood; anything else in the table makes it a resource.</summary>
+        private static ItemDrop.ItemData FindResource(DropTable drops)
+        {
+            if (drops?.m_drops == null)
+            {
+                return null;
+            }
+
+            foreach (var drop in drops.m_drops)
+            {
+                var item = drop.m_item != null ? drop.m_item.GetComponent<ItemDrop>() : null;
+                var data = item != null ? item.m_itemData : null;
+                if (data?.m_shared == null || BulkMaterials.Contains(data.m_shared.m_name))
+                {
+                    continue;
+                }
+                return data;
+            }
+            return null;
+        }
+
+        private static readonly HashSet<string> BulkMaterials = new HashSet<string>(StringComparer.Ordinal)
+        {
+            StoneItem, "$item_wood", "$item_finewood", "$item_roundlog", "$item_elderbark", "$item_blackwood",
+        };
 
         // ---- Pickables ----
 
