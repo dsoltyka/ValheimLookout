@@ -4,9 +4,7 @@ A client-side Valheim mod that pins nearby points of interest on your minimap. Y
 
 As you explore, everything the game has loaded around you that you have opted into shows up as a pin on both the minimap and the large map. Walk away and the pins go with the terrain; nothing is written to your map save, so your real pins stay clean.
 
-<!-- Screenshot goes here once docs/screenshot.png exists:
-![Ore deposits and a burial chamber pinned on the minimap](https://raw.githubusercontent.com/dsoltyka/ValheimLookout/main/docs/screenshot.png)
--->
+![Copper deposits and dungeon entrances pinned on the large map](https://raw.githubusercontent.com/dsoltyka/ValheimLookout/main/docs/map.png)
 
 ## What it pins
 
@@ -15,6 +13,8 @@ As you explore, everything the game has loaded around you that you have opted in
 **Everything else is opt-in, from the panel**
 
 Press **F7** (configurable), or click the **Lookout** button in the top-left corner of the large map. The panel lists every item the world can yield from something you can mine, break or pick: copper, tin, silver and the other ores, but also guck, ancient seeds, feathers, soft tissue, yggdrasil wood, berries, mushrooms, and whatever new biomes or mods add. Tick an item and every deposit, breakable or bush that yields it gets a pin with that item's icon. Untouched veins count, not just ones someone has already hit. A filter box narrows the list, and a number on each row shows how many sources are loaded near you right now.
+
+![The Lookout panel: category switches, filter, and per-item toggles with nearby counts](https://raw.githubusercontent.com/dsoltyka/ValheimLookout/main/docs/panel.png)
 
 The list is built by scanning the game's own object definitions when you load in, so it is complete for your install rather than a hand-picked set.
 
@@ -25,7 +25,9 @@ More switches live at the top of the panel:
 * **Buried deposits**: pin veins that are completely under the ground, like untouched silver. Off by default so the radar does not give hidden ore away; partially exposed veins always show.
 * **Only explored map**: hide pins that would land on map you have not uncovered yet.
 
-Pins show for the area the game keeps loaded around you (roughly 200 m). An optional `MaxDistance` trims that further.
+Pins show for the area the game keeps loaded around you (roughly 200 m). An optional `MaxDistance` trims that further. They appear on the minimap as well as the large map:
+
+![Pins on the minimap](https://raw.githubusercontent.com/dsoltyka/ValheimLookout/main/docs/minimap.png)
 
 ## Installation
 
