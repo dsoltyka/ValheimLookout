@@ -230,13 +230,13 @@ namespace Lookout
 
             // Category toggles, two per line
             float y = -76f;
-            _dungeons = CreateLabeledToggle("Dungeon entrances", 30f, y, v => S.ShowDungeons.Value = v);
-            _locations = CreateLabeledToggle("Other locations", PanelWidth / 2f + 10f, y, v => S.ShowOtherLocations.Value = v);
+            _dungeons = CreateLabeledToggle("Dungeon Entrances", 30f, y, v => S.ShowDungeons.Value = v);
+            _locations = CreateLabeledToggle("Other Locations", PanelWidth / 2f + 10f, y, v => S.ShowOtherLocations.Value = v);
             y -= 34f;
-            _buried = CreateLabeledToggle("Buried deposits", 30f, y, v => S.ShowBuried.Value = v);
-            _explored = CreateLabeledToggle("Only explored map", PanelWidth / 2f + 10f, y, v => S.OnlyExploredAreas.Value = v);
+            _buried = CreateLabeledToggle("Buried Deposits", 30f, y, v => S.ShowBuried.Value = v);
+            _explored = CreateLabeledToggle("Only Explored Map", PanelWidth / 2f + 10f, y, v => S.OnlyExploredAreas.Value = v);
             y -= 34f;
-            _discovered = CreateLabeledToggle("Only discovered items", 30f, y, v => S.OnlyDiscoveredItems.Value = v);
+            _discovered = CreateLabeledToggle("Only Discovered Items", 30f, y, v => S.OnlyDiscoveredItems.Value = v);
 
             // Filter
             y -= 44f;
@@ -284,10 +284,12 @@ namespace Lookout
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = new Vector2(x, y);
             var toggle = toggleGo.GetComponent<Toggle>();
+            QuietSelection(toggle);
             toggle.onValueChanged.AddListener(v => onChanged(v));
 
+            // The label's pivot is its vertical middle; the toggle's is its top, so aim at the toggle's centre line.
             var text = gui.CreateText(label, _panel.transform, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(x + 32f, y - 2f), gui.AveriaSerif, 16, gui.ValheimBeige, true, Color.black, 220f, 24f, false);
+                new Vector2(x + 32f, y - 12f), gui.AveriaSerif, 16, gui.ValheimBeige, true, Color.black, 220f, 24f, false);
             AlignLeft(text);
             return toggle;
         }
@@ -410,13 +412,24 @@ namespace Lookout
             var toggleGo = gui.CreateToggle(root.transform, 26f, 26f);
             Fixed(toggleGo, 26f, 26f);
             var toggle = toggleGo.GetComponent<Toggle>();
-            var colors = toggle.colors;
-            colors.fadeDuration = 0f;          // no fade-in when rows are (re)built
-            toggle.colors = colors;
+            QuietSelection(toggle);
             toggle.SetIsOnWithoutNotify(S.IsItemEnabled(entry.Key));
             toggle.onValueChanged.AddListener(v => S.SetItemEnabled(entry.Key, v));
 
             return new Row { Entry = entry, Root = root, Toggle = toggle, Nearby = nearby };
+        }
+
+        /// <summary>
+        /// Unity keeps a clicked control "selected" until something else is clicked, and tints it with the selected
+        /// colour, which reads as a stuck highlight. Make selected look like normal so only hover lights a toggle up,
+        /// and drop the fade so rebuilt rows appear in their final state.
+        /// </summary>
+        private static void QuietSelection(Toggle toggle)
+        {
+            var colors = toggle.colors;
+            colors.selectedColor = colors.normalColor;
+            colors.fadeDuration = 0f;
+            toggle.colors = colors;
         }
 
         /// <summary>Gives a row child a fixed size in the row's horizontal layout.</summary>
