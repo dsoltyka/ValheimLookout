@@ -420,16 +420,24 @@ namespace Lookout
         }
 
         /// <summary>
-        /// Unity keeps a clicked control "selected" until something else is clicked, and tints it with the selected
-        /// colour, which reads as a stuck highlight. Make selected look like normal so only hover lights a toggle up,
-        /// and drop the fade so rebuilt rows appear in their final state.
+        /// Unity keeps a clicked control "selected" until something else is clicked. A selected control shows the
+        /// selected tint and never the hover tint, which reads as a stuck highlight. Releasing the selection right
+        /// after each click keeps hover behaving like a normal checkbox. The fade is dropped so rebuilt rows appear
+        /// in their final state.
         /// </summary>
         private static void QuietSelection(Toggle toggle)
         {
             var colors = toggle.colors;
-            colors.selectedColor = colors.normalColor;
             colors.fadeDuration = 0f;
             toggle.colors = colors;
+            toggle.onValueChanged.AddListener(_ =>
+            {
+                var events = UnityEngine.EventSystems.EventSystem.current;
+                if (events != null && events.currentSelectedGameObject == toggle.gameObject)
+                {
+                    events.SetSelectedGameObject(null);
+                }
+            });
         }
 
         /// <summary>Gives a row child a fixed size in the row's horizontal layout.</summary>
