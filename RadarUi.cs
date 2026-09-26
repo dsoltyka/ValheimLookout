@@ -303,54 +303,70 @@ namespace POIRadar
         {
             var gui = GUIManager.Instance;
 
-            var root = new GameObject("Row", typeof(RectTransform), typeof(LayoutElement));
+            // The row lays its columns out itself, so it adapts to whatever width the list ends up with:
+            // [icon 32] [name: takes the rest] [source 80] [nearby 56] [toggle 26]
+            var root = new GameObject("Row", typeof(RectTransform), typeof(LayoutElement), typeof(HorizontalLayoutGroup));
             root.transform.SetParent(_content, false);
-            root.GetComponent<LayoutElement>().preferredHeight = RowHeight;
-            root.GetComponent<LayoutElement>().minHeight = RowHeight;
+            var rowSize = root.GetComponent<LayoutElement>();
+            rowSize.preferredHeight = RowHeight;
+            rowSize.minHeight = RowHeight;
+            var rowLayout = root.GetComponent<HorizontalLayoutGroup>();
+            rowLayout.childAlignment = TextAnchor.MiddleLeft;
+            rowLayout.childControlWidth = true;
+            rowLayout.childControlHeight = true;
+            rowLayout.childForceExpandWidth = false;
+            rowLayout.childForceExpandHeight = false;
+            rowLayout.spacing = 8f;
+            rowLayout.padding = new RectOffset(6, 10, 0, 0);
 
-            // Icon
-            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
             iconGo.transform.SetParent(root.transform, false);
-            var iconRect = (RectTransform)iconGo.transform;
-            iconRect.anchorMin = new Vector2(0f, 0.5f);
-            iconRect.anchorMax = new Vector2(0f, 0.5f);
-            iconRect.pivot = new Vector2(0f, 0.5f);
-            iconRect.anchoredPosition = new Vector2(6f, 0f);
-            iconRect.sizeDelta = new Vector2(32f, 32f);
+            Fixed(iconGo, 32f, 32f);
             var icon = iconGo.GetComponent<Image>();
             icon.sprite = entry.Icon != null ? entry.Icon : Icons.Generic;
             icon.preserveAspect = true;
             icon.raycastTarget = false;
 
-            // Columns (row is ~492 wide): icon 6-38 | name 46-290 | source 296-386 | nearby 392-448 | toggle 456-482
             var nameGo = gui.CreateText(entry.Name, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
-                new Vector2(46f, 0f), gui.AveriaSerif, 17, Color.white, true, Color.black, 244f, RowHeight, false);
+                Vector2.zero, gui.AveriaSerif, 17, Color.white, true, Color.black, 100f, RowHeight, false);
             AlignLeft(nameGo, clip: true);
+            var nameSize = nameGo.AddComponent<LayoutElement>();
+            nameSize.flexibleWidth = 1f;
+            nameSize.minWidth = 60f;
+            nameSize.preferredHeight = RowHeight;
 
             string source = entry.Sources == (PoiSource.Deposit | PoiSource.Pickable) ? "both"
                 : entry.Sources == PoiSource.Pickable ? "pickable" : "deposit";
             var sourceGo = gui.CreateText(source, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
-                new Vector2(296f, 0f), gui.AveriaSerif, 13, new Color(0.75f, 0.7f, 0.6f), false, Color.black, 90f, RowHeight, false);
+                Vector2.zero, gui.AveriaSerif, 13, new Color(0.75f, 0.7f, 0.6f), false, Color.black, 80f, RowHeight, false);
             AlignLeft(sourceGo, clip: true);
+            Fixed(sourceGo, 80f, RowHeight);
 
             var nearbyGo = gui.CreateText("", root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
-                new Vector2(392f, 0f), gui.AveriaSerifBold, 16, gui.ValheimOrange, true, Color.black, 56f, RowHeight, false);
+                Vector2.zero, gui.AveriaSerifBold, 16, gui.ValheimOrange, true, Color.black, 56f, RowHeight, false);
             AlignLeft(nearbyGo, clip: true);
+            Fixed(nearbyGo, 56f, RowHeight);
             var nearby = nearbyGo.GetComponent<Text>();
             nearby.alignment = TextAnchor.MiddleRight;
 
-            // Toggle
             var toggleGo = gui.CreateToggle(root.transform, 26f, 26f);
-            var toggleRect = toggleGo.GetComponent<RectTransform>();
-            toggleRect.anchorMin = new Vector2(1f, 0.5f);
-            toggleRect.anchorMax = new Vector2(1f, 0.5f);
-            toggleRect.pivot = new Vector2(1f, 0.5f);
-            toggleRect.anchoredPosition = new Vector2(-10f, 0f);
+            Fixed(toggleGo, 26f, 26f);
             var toggle = toggleGo.GetComponent<Toggle>();
             toggle.SetIsOnWithoutNotify(S.IsItemEnabled(entry.Key));
             toggle.onValueChanged.AddListener(v => S.SetItemEnabled(entry.Key, v));
 
             return new Row { Entry = entry, Root = root, Toggle = toggle, Nearby = nearby };
+        }
+
+        /// <summary>Gives a row child a fixed size in the row's horizontal layout.</summary>
+        private static void Fixed(GameObject go, float width, float height)
+        {
+            var element = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            element.preferredWidth = width;
+            element.minWidth = width;
+            element.preferredHeight = height;
+            element.minHeight = height;
+            element.flexibleWidth = 0f;
         }
 
         /// <summary>Left-aligns a Jötunn text and makes its position mean its left edge. Clipped texts stay inside their column.</summary>
