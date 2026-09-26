@@ -24,7 +24,7 @@ namespace POIRadar
         private InputField _filter;
         private Transform _content;
         private Text _summary;
-        private Toggle _dungeons, _locations, _buried, _explored;
+        private Toggle _dungeons, _locations, _buried, _explored, _discovered;
         private readonly List<Row> _rows = new List<Row>();
         private bool _dirty = true;
         private float _nextCountRefresh;
@@ -198,6 +198,8 @@ namespace POIRadar
             y -= 34f;
             _buried = CreateLabeledToggle("Buried deposits", 30f, y, v => S.ShowBuried.Value = v);
             _explored = CreateLabeledToggle("Only explored map", PanelWidth / 2f + 10f, y, v => S.OnlyExploredAreas.Value = v);
+            y -= 34f;
+            _discovered = CreateLabeledToggle("Only discovered items", 30f, y, v => S.OnlyDiscoveredItems.Value = v);
 
             // Filter
             y -= 44f;
@@ -259,6 +261,7 @@ namespace POIRadar
             _locations.SetIsOnWithoutNotify(S.ShowOtherLocations.Value);
             _buried.SetIsOnWithoutNotify(S.ShowBuried.Value);
             _explored.SetIsOnWithoutNotify(S.OnlyExploredAreas.Value);
+            _discovered.SetIsOnWithoutNotify(S.OnlyDiscoveredItems.Value);
         }
 
         private void RebuildRows()
@@ -272,7 +275,13 @@ namespace POIRadar
             _rows.Clear();
 
             string filter = _filter != null ? _filter.text.Trim() : string.Empty;
-            var entries = Catalog.Entries
+            var player = Player.m_localPlayer;
+            bool discoveredOnly = S.OnlyDiscoveredItems.Value && player != null;
+
+            var visible = Catalog.Entries
+                .Where(e => !discoveredOnly || player.IsKnownMaterial(e.Key))
+                .ToList();
+            var entries = visible
                 .Where(e => filter.Length == 0 || e.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
                 .OrderByDescending(e => S.IsItemEnabled(e.Key))
                 .ThenBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase)
@@ -283,8 +292,11 @@ namespace POIRadar
                 _rows.Add(CreateRow(entry));
             }
 
-            int enabled = Catalog.Entries.Count(e => S.IsItemEnabled(e.Key));
-            _summary.text = $"{enabled} of {Catalog.Entries.Count()} items pinned. Number on the right = loaded nearby.";
+            int enabled = visible.Count(e => S.IsItemEnabled(e.Key));
+            int hidden = Catalog.Entries.Count() - visible.Count;
+            _summary.text = hidden > 0
+                ? $"{enabled} of {visible.Count} items pinned ({hidden} undiscovered hidden). Right column = loaded nearby."
+                : $"{enabled} of {visible.Count} items pinned. Right column = loaded nearby.";
         }
 
         private Row CreateRow(CatalogEntry entry)
@@ -310,21 +322,20 @@ namespace POIRadar
             icon.preserveAspect = true;
             icon.raycastTarget = false;
 
-            // Name
+            // Columns (row is ~492 wide): icon 6-38 | name 46-290 | source 296-386 | nearby 392-448 | toggle 456-482
             var nameGo = gui.CreateText(entry.Name, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
-                new Vector2(46f, 0f), gui.AveriaSerif, 17, Color.white, true, Color.black, 260f, RowHeight, false);
-            AlignLeft(nameGo);
+                new Vector2(46f, 0f), gui.AveriaSerif, 17, Color.white, true, Color.black, 244f, RowHeight, false);
+            AlignLeft(nameGo, clip: true);
 
-            // Source
-            string source = entry.Sources == (PoiSource.Deposit | PoiSource.Pickable) ? "deposit, pickable"
+            string source = entry.Sources == (PoiSource.Deposit | PoiSource.Pickable) ? "both"
                 : entry.Sources == PoiSource.Pickable ? "pickable" : "deposit";
             var sourceGo = gui.CreateText(source, root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
-                new Vector2(310f, 0f), gui.AveriaSerif, 13, new Color(0.75f, 0.7f, 0.6f), false, Color.black, 110f, RowHeight, false);
-            AlignLeft(sourceGo);
+                new Vector2(296f, 0f), gui.AveriaSerif, 13, new Color(0.75f, 0.7f, 0.6f), false, Color.black, 90f, RowHeight, false);
+            AlignLeft(sourceGo, clip: true);
 
-            // Nearby count
-            var nearbyGo = gui.CreateText("", root.transform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-70f, 0f), gui.AveriaSerifBold, 16, gui.ValheimOrange, true, Color.black, 50f, RowHeight, false);
+            var nearbyGo = gui.CreateText("", root.transform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f),
+                new Vector2(392f, 0f), gui.AveriaSerifBold, 16, gui.ValheimOrange, true, Color.black, 56f, RowHeight, false);
+            AlignLeft(nearbyGo, clip: true);
             var nearby = nearbyGo.GetComponent<Text>();
             nearby.alignment = TextAnchor.MiddleRight;
 
@@ -342,13 +353,15 @@ namespace POIRadar
             return new Row { Entry = entry, Root = root, Toggle = toggle, Nearby = nearby };
         }
 
-        private static void AlignLeft(GameObject textGo)
+        /// <summary>Left-aligns a Jötunn text and makes its position mean its left edge. Clipped texts stay inside their column.</summary>
+        private static void AlignLeft(GameObject textGo, bool clip = false)
         {
             var text = textGo.GetComponent<Text>();
             if (text != null)
             {
                 text.alignment = TextAnchor.MiddleLeft;
-                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                text.horizontalOverflow = clip ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+                text.verticalOverflow = VerticalWrapMode.Truncate;
             }
             var rect = textGo.GetComponent<RectTransform>();
             rect.pivot = new Vector2(0f, 0.5f);

@@ -21,8 +21,9 @@ Press **F7** (configurable), or click the **POI Radar** button in the top-left c
 
 The list is built by scanning the game's own object definitions when you load in, so it is complete for your install rather than a hand-picked set.
 
-Two more switches live at the top of the panel:
+More switches live at the top of the panel:
 
+* **Only discovered items** (on by default): the list and the pins only include items your character has already picked up at least once, so nothing you have not found yet is spoiled. Untick it to see everything the world can yield.
 * **Other locations**: surface spots placed by the world generator, such as ruins, abandoned camps, tar pits, runestones, altars and villages.
 * **Buried deposits**: pin veins that are completely under the ground, like untouched silver. Off by default so the radar does not give hidden ore away; partially exposed veins always show.
 * **Only explored map**: hide pins that would land on map you have not uncovered yet.
@@ -44,6 +45,7 @@ Requires [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepI
 | What to pin | `Dungeons` | true | Pin dungeon entrances |
 | What to pin | `OtherLocations` | false | Pin surface locations (ruins, camps, tar pits, altars) |
 | What to pin | `Items` | the ores | Comma-separated item tokens to pin; the panel edits this for you |
+| What to pin | `OnlyDiscoveredItems` | true | Only list and pin items your character has already discovered, so the panel does not spoil what you have not found |
 | Display | `MaxDistance` | 0 | Only pin within this many meters; 0 = everything loaded |
 | Display | `ShowBuried` | false | Also pin deposits fully below the terrain |
 | Display | `OnlyExploredAreas` | false | Only pin objects on map you have explored (or had shared with you) |

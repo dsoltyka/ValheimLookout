@@ -14,6 +14,7 @@ namespace POIRadar
         public ConfigEntry<bool> ShowDungeons { get; }
         public ConfigEntry<bool> ShowOtherLocations { get; }
         public ConfigEntry<string> EnabledItems { get; }
+        public ConfigEntry<bool> OnlyDiscoveredItems { get; }
 
         public ConfigEntry<float> MaxDistance { get; }
         public ConfigEntry<bool> ShowBuried { get; }
@@ -44,6 +45,10 @@ namespace POIRadar
             EnabledItems = config.Bind(categories, "Items", DefaultItems,
                 "Comma-separated item tokens to pin. Any deposit, breakable or pickable that yields one of these gets a pin with that item's icon. " +
                 "Easiest to edit from the in-game panel (see Interface), which lists every item the world can yield.");
+
+            OnlyDiscoveredItems = config.Bind(categories, "OnlyDiscoveredItems", true,
+                "Only list and pin items your character has already discovered (picked up at least once). " +
+                "Keeps the panel from spoiling items you have not found yet. Turn off to see everything the world can yield.");
 
             MaxDistance = config.Bind(display, "MaxDistance", 0f,
                 new ConfigDescription("Only pin objects within this many meters of the player. 0 means everything the game has loaded around you (roughly 200 m).",

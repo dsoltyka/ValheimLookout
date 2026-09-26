@@ -107,12 +107,12 @@ namespace POIRadar
             return marker;
         }
 
-        /// <summary>First item the player has opted into, or null when none of this object's yields are enabled.</summary>
-        public CatalogEntry FirstEnabledItem(Settings settings)
+        /// <summary>First item that passes the given test (opted in, discovered...), or null when none does.</summary>
+        public CatalogEntry FirstItem(Func<CatalogEntry, bool> allowed)
         {
             foreach (var item in Items)
             {
-                if (settings.IsItemEnabled(item.Key))
+                if (allowed(item))
                 {
                     return item;
                 }

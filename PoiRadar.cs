@@ -94,6 +94,8 @@ namespace POIRadar
             bool hideBuried = !S.ShowBuried.Value;
             bool labels = S.ShowLabels.Value;
             bool large = S.LargeIcons.Value;
+            bool discoveredOnly = S.OnlyDiscoveredItems.Value;
+            System.Func<CatalogEntry, bool> allowed = e => S.IsItemEnabled(e.Key) && (!discoveredOnly || player.IsKnownMaterial(e.Key));
 
             Catalog.ResetNearbyCounts();
 
@@ -115,7 +117,7 @@ namespace POIRadar
                     case PoiCategory.Dungeon: enabled = S.ShowDungeons.Value; break;
                     case PoiCategory.Location: enabled = S.ShowOtherLocations.Value; break;
                     default:
-                        item0 = marker.FirstEnabledItem(S);
+                        item0 = marker.FirstItem(allowed);
                         enabled = item0 != null;
                         break;
                 }
