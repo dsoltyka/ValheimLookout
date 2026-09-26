@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Lookout</AssemblyName>
     <RootNamespace>Lookout</RootNamespace>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Description>Pins nearby dungeons on the minimap, plus an in-game panel to opt into pins for any item the world can yield: ores, plants, anything. Client-side.</Description>
     <ThunderstoreWebsite>https://github.com/dsoltyka/ValheimLookout</ThunderstoreWebsite>
   </PropertyGroup>

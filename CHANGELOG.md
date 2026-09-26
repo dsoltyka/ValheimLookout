@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+- Fixed blank pins with the fallback ring icon appearing on Ashlands structures. Ash vines clone themselves as they grow, and the clone carried an empty marker.
+- Panel: the source column now distinguishes deposits, breakables and pickables.
+- Panel: toggles no longer look stuck after a click, option labels line up with their checkboxes, and the list no longer flashes when you tick an item.
+- New icon.
+- Quieter logging.
+
 ## 1.0.0
 
 - Initial release.
