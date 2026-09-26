@@ -15,6 +15,11 @@ namespace POIRadar
         private static readonly AccessTools.FieldRef<Minimap, List<Minimap.PinData>> PinsRef =
             AccessTools.FieldRefAccess<Minimap, List<Minimap.PinData>>("m_pins");
 
+        // Minimap.IsExplored(Vector3 worldPos) is private; it also counts map data shared by other players.
+        private static readonly System.Func<Minimap, Vector3, bool> IsExplored =
+            AccessTools.MethodDelegate<System.Func<Minimap, Vector3, bool>>(
+                AccessTools.Method(typeof(Minimap), "IsExplored", new[] { typeof(Vector3) }));
+
         private readonly HashSet<Minimap.PinData> _livePins = new HashSet<Minimap.PinData>();
         private float _nextRefresh;
         private bool _rebuildRequested;
@@ -71,14 +76,17 @@ namespace POIRadar
 
             Vector3 origin = player.transform.position;
             float maxDistance = S.MaxDistance.Value;
+            bool exploredOnly = S.OnlyExploredAreas.Value && IsExplored != null;
             bool labels = S.ShowLabels.Value;
             bool large = S.LargeIcons.Value;
 
             foreach (var marker in PoiMarker.All)
             {
+                Vector3 position = marker.transform.position;
                 bool wanted = IsEnabled(marker.Category)
                               && marker.IsActive
-                              && (maxDistance <= 0f || Vector3.Distance(origin, marker.transform.position) <= maxDistance);
+                              && (maxDistance <= 0f || Vector3.Distance(origin, position) <= maxDistance)
+                              && (!exploredOnly || IsExplored(map, position));
 
                 if (!wanted)
                 {

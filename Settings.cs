@@ -12,6 +12,7 @@ namespace POIRadar
         public ConfigEntry<bool> ShowOtherLocations { get; }
 
         public ConfigEntry<float> MaxDistance { get; }
+        public ConfigEntry<bool> OnlyExploredAreas { get; }
         public ConfigEntry<bool> ShowLabels { get; }
         public ConfigEntry<bool> LargeIcons { get; }
         public ConfigEntry<float> RefreshSeconds { get; }
@@ -37,6 +38,9 @@ namespace POIRadar
             MaxDistance = config.Bind(display, "MaxDistance", 0f,
                 new ConfigDescription("Only pin objects within this many meters of the player. 0 means everything the game has loaded around you (roughly 200 m).",
                     new AcceptableValueRange<float>(0f, 1000f)));
+            OnlyExploredAreas = config.Bind(display, "OnlyExploredAreas", false,
+                "Only pin objects that sit on a part of the map you have already explored (including map data shared with you). " +
+                "Off by default so pins always appear; turn on if you do not want the radar to hint at unexplored terrain.");
             ShowLabels = config.Bind(display, "ShowLabels", true,
                 "Draw the name next to each pin (for example 'Copper deposit' or 'Burial Chambers').");
             LargeIcons = config.Bind(display, "LargeIcons", false,

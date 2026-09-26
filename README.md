@@ -18,7 +18,7 @@ As you explore, everything the game has loaded around you that is worth a detour
 * **Pickables**: berries, mushrooms, thistle, dandelions, barley, flax and friends. Picked plants disappear from the map until they regrow. A word filter (`Branch,Stone,Flint` by default) keeps junk off the map.
 * **Other locations**: surface spots placed by the world generator, such as ruins, abandoned camps, tar pits, runestones, altars and villages.
 
-Pins show for the area the game keeps loaded around you (roughly 200 m). An optional `MaxDistance` trims that further.
+Pins show for the area the game keeps loaded around you (roughly 200 m). An optional `MaxDistance` trims that further, and `OnlyExploredAreas` hides pins that would land on map you have not uncovered yet.
 
 ## Installation
 
@@ -37,6 +37,7 @@ Requires [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepI
 | Categories | `Pickables` | false | Pin berries, mushrooms, plants |
 | Categories | `OtherLocations` | false | Pin surface locations (ruins, camps, tar pits, altars) |
 | Display | `MaxDistance` | 0 | Only pin within this many meters; 0 = everything loaded |
+| Display | `OnlyExploredAreas` | false | Only pin objects on map you have already explored (or had shared with you), so the radar never hints at unexplored terrain |
 | Display | `ShowLabels` | true | Draw the name next to each pin |
 | Display | `LargeIcons` | false | Double-size pins |
 | Display | `RefreshSeconds` | 0.5 | How often pins are re-evaluated |
