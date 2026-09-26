@@ -30,9 +30,9 @@ Paths to the game and the BepInEx profile are configured once in `ValheimModBuil
 
 **Tagging** (`PoiPatches`) postfixes `Location.Awake`, `Destructible.Awake`, `MineRock.Start`, `MineRock5.Awake` and `Pickable.Awake` and attaches a `PoiMarker` holding the object's catalog entries. Locations with `m_hasInterior` are dungeons; interiors themselves sit 5000 m up and are skipped.
 
-**Radar** (`PoiRadar`) runs on a timer. For every marker it checks category/item enablement, active state (picked bushes), distance, explored-only and buried rules, then adds or removes a `Minimap.PinType.None` pin with a custom sprite and `save: false`. That is the same mechanism the game uses for its own location icons, and it survives the map clearing its pins on load because the radar re-adds anything no longer present. It also counts how many active markers yield each item, which the panel shows.
+**Radar** (`PinManager`) runs on a timer. For every marker it checks category/item enablement, active state (picked bushes), distance, explored-only and buried rules, then adds or removes a `Minimap.PinType.None` pin with a custom sprite and `save: false`. That is the same mechanism the game uses for its own location icons, and it survives the map clearing its pins on load because the radar re-adds anything no longer present. It also counts how many active markers yield each item, which the panel shows.
 
-**Panel** (`RadarUi`) is built from Jötunn's `GUIManager` wood-panel helpers under `CustomGUIFront`, toggled by a `KeyboardShortcut` or a button added to `Minimap.m_largeRoot`. Item toggles write the `Items` config entry, which fires the normal `SettingChanged` path.
+**Panel** (`LookoutPanel`) is built from Jötunn's `GUIManager` wood-panel helpers under `CustomGUIFront`, toggled by a `KeyboardShortcut` or a button added to `Minimap.m_largeRoot`. Item toggles write the `Items` config entry, which fires the normal `SettingChanged` path.
 
 ## Releasing
 

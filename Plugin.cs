@@ -29,7 +29,7 @@ namespace Lookout
             _harmony = new Harmony(PluginGuid);
             _harmony.PatchAll(typeof(PoiPatches));
 
-            gameObject.AddComponent<PoiRadar>();
+            gameObject.AddComponent<PinManager>();
 
             Log.LogInfo($"{BuildInfo.Name} {BuildInfo.Version} loaded");
         }

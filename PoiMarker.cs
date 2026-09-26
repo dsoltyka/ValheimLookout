@@ -134,7 +134,7 @@ namespace Lookout
         private void OnDisable()
         {
             s_all.Remove(this);
-            PoiRadar.RemovePin(this);
+            PinManager.RemovePin(this);
         }
     }
 }

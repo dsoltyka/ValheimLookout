@@ -10,7 +10,7 @@ namespace Lookout
     /// Pins use the same mechanism the game uses for its own location icons (a None-type pin with a custom sprite),
     /// so they draw on both the small minimap and the large map and are never written to the save.
     /// </summary>
-    internal sealed class PoiRadar : MonoBehaviour
+    internal sealed class PinManager : MonoBehaviour
     {
         private static readonly AccessTools.FieldRef<Minimap, List<Minimap.PinData>> PinsRef =
             AccessTools.FieldRefAccess<Minimap, List<Minimap.PinData>>("m_pins");
@@ -23,7 +23,7 @@ namespace Lookout
         private readonly HashSet<Minimap.PinData> _livePins = new HashSet<Minimap.PinData>();
         private float _nextRefresh;
         private bool _rebuildRequested;
-        private RadarUi _ui;
+        private LookoutPanel _ui;
 
         private static Settings S => Plugin.Settings;
 
@@ -42,7 +42,7 @@ namespace Lookout
         {
             if (_ui == null)
             {
-                _ui = gameObject.AddComponent<RadarUi>();
+                _ui = gameObject.AddComponent<LookoutPanel>();
             }
 
             if (S.ToggleKey.Value.IsDown() && Player.m_localPlayer != null)

@@ -12,7 +12,7 @@ namespace Lookout
     /// (icon, name, where it comes from, how many are loaded nearby, and an on/off toggle). Built with Jötunn's
     /// wood-panel helpers so it matches the game. Opened with the configured key or the button on the large map.
     /// </summary>
-    internal sealed class RadarUi : MonoBehaviour
+    internal sealed class LookoutPanel : MonoBehaviour
     {
         private const float PanelWidth = 560f;
         private const float PanelHeight = 680f;
