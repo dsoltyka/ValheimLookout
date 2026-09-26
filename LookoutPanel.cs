@@ -27,6 +27,8 @@ namespace Lookout
         private Toggle _dungeons, _locations, _buried, _explored, _discovered;
         private readonly List<Row> _rows = new List<Row>();
         private bool _dirty = true;
+        private bool _syncRequested;
+        private bool _builtDiscoveredOnly;
         private float _nextCountRefresh;
         private GameObject _mapButton;
 
@@ -43,13 +45,13 @@ namespace Lookout
         private void OnEnable()
         {
             Catalog.Changed += MarkDirty;
-            S.Changed += MarkDirty;
+            S.Changed += OnSettingsChanged;
         }
 
         private void OnDisable()
         {
             Catalog.Changed -= MarkDirty;
-            S.Changed -= MarkDirty;
+            S.Changed -= OnSettingsChanged;
             if (_panel != null)
             {
                 Destroy(_panel);
@@ -84,7 +86,13 @@ namespace Lookout
             if (_dirty)
             {
                 _dirty = false;
+                _syncRequested = false;
                 RebuildRows();
+            }
+            else if (_syncRequested)
+            {
+                _syncRequested = false;
+                SyncRows();
             }
 
             if (Time.unscaledTime >= _nextCountRefresh)
@@ -170,6 +178,33 @@ namespace Lookout
         private void MarkDirty()
         {
             _dirty = true;
+        }
+
+        /// <summary>
+        /// A setting changed. Only the discovered-only switch alters which rows exist, so everything else is synced in
+        /// place; rebuilding on every item toggle would recreate all toggles and make them flash.
+        /// </summary>
+        private void OnSettingsChanged()
+        {
+            if (S.OnlyDiscoveredItems.Value != _builtDiscoveredOnly)
+            {
+                _dirty = true;
+            }
+            else
+            {
+                _syncRequested = true;
+            }
+        }
+
+        /// <summary>Refreshes toggles and the summary line without touching the row objects.</summary>
+        private void SyncRows()
+        {
+            SyncCategoryToggles();
+            foreach (var row in _rows)
+            {
+                row.Toggle.SetIsOnWithoutNotify(S.IsItemEnabled(row.Entry.Key));
+            }
+            UpdateSummary();
         }
 
         // ---- construction ----
@@ -278,7 +313,8 @@ namespace Lookout
 
             string filter = _filter != null ? _filter.text.Trim() : string.Empty;
             var player = Player.m_localPlayer;
-            bool discoveredOnly = S.OnlyDiscoveredItems.Value && player != null;
+            _builtDiscoveredOnly = S.OnlyDiscoveredItems.Value;
+            bool discoveredOnly = _builtDiscoveredOnly && player != null;
 
             var visible = Catalog.Entries
                 .Where(e => !discoveredOnly || player.IsKnownMaterial(e.Key))
@@ -294,11 +330,31 @@ namespace Lookout
                 _rows.Add(CreateRow(entry));
             }
 
-            int enabled = visible.Count(e => S.IsItemEnabled(e.Key));
-            int hidden = Catalog.Entries.Count() - visible.Count;
+            UpdateSummary();
+        }
+
+        private void UpdateSummary()
+        {
+            var player = Player.m_localPlayer;
+            bool discoveredOnly = S.OnlyDiscoveredItems.Value && player != null;
+            int total = 0, visible = 0, enabled = 0;
+            foreach (var entry in Catalog.Entries)
+            {
+                total++;
+                if (discoveredOnly && !player.IsKnownMaterial(entry.Key))
+                {
+                    continue;
+                }
+                visible++;
+                if (S.IsItemEnabled(entry.Key))
+                {
+                    enabled++;
+                }
+            }
+            int hidden = total - visible;
             _summary.text = hidden > 0
-                ? $"{enabled} of {visible.Count} items pinned ({hidden} undiscovered hidden). Right column = loaded nearby."
-                : $"{enabled} of {visible.Count} items pinned. Right column = loaded nearby.";
+                ? $"{enabled} of {visible} items pinned ({hidden} undiscovered hidden). Right column = loaded nearby."
+                : $"{enabled} of {visible} items pinned. Right column = loaded nearby.";
         }
 
         private Row CreateRow(CatalogEntry entry)
@@ -354,6 +410,9 @@ namespace Lookout
             var toggleGo = gui.CreateToggle(root.transform, 26f, 26f);
             Fixed(toggleGo, 26f, 26f);
             var toggle = toggleGo.GetComponent<Toggle>();
+            var colors = toggle.colors;
+            colors.fadeDuration = 0f;          // no fade-in when rows are (re)built
+            toggle.colors = colors;
             toggle.SetIsOnWithoutNotify(S.IsItemEnabled(entry.Key));
             toggle.onValueChanged.AddListener(v => S.SetItemEnabled(entry.Key, v));
 
