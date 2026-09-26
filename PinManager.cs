@@ -157,7 +157,7 @@ namespace Lookout
                     if (_reported.Add(prefab))
                     {
                         string items = string.Join(", ", marker.Items.Select(i => i.Key + (i.Icon == null ? " (no icon)" : "")));
-                        Plugin.Log.LogInfo($"Fallback pin for '{prefab}' ({marker.Category}): hover='{marker.HoverName}', item='{item0?.Key}', yields=[{items}]");
+                        Plugin.Log.LogDebug($"Fallback pin for '{prefab}' ({marker.Category}): hover='{marker.HoverName}', item='{item0?.Key}', yields=[{items}]");
                     }
                 }
 

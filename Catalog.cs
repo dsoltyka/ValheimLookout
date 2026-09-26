@@ -180,7 +180,7 @@ namespace Lookout
                 }
             }
 
-            Plugin.Log.LogInfo($"Catalog: {s_entries.Count} pinnable items from {s_scannedPrefabCount} prefabs");
+            Plugin.Log.LogDebug($"Catalog: {s_entries.Count} pinnable items from {s_scannedPrefabCount} prefabs");
             if (s_entries.Count != before)
             {
                 Changed?.Invoke();
